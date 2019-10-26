@@ -11,7 +11,7 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
-      "launchUrl": "api/ChatUser",
+      "launchUrl": "api/Account",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
