@@ -30,7 +30,7 @@ namespace chat.backend.Controllers
 
             return new OkObjectResult(new
             {
-                user.ChatUserID,
+                user.Id,
                 user.Email,
                 user.UserName
             });

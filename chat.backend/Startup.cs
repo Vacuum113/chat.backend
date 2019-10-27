@@ -22,10 +22,7 @@ using chat.backend.Helpers;
 namespace chat.backend
 {
     public class Startup
-    {
-        const string _signingSecurityKey = "Some0String0Key0HWO0DONT0KNOw0ANY43523dsfa32310";
-        SigningSymmetricKey _signingKey = new SigningSymmetricKey(_signingSecurityKey);
-
+    { 
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -38,35 +35,41 @@ namespace chat.backend
             services.AddCors();
             services.AddMvc(options => options.EnableEndpointRouting = false);
 
-            services.AddSingleton<IJwtSigningEncodingKey>(_signingKey);
+            var jwtConfig = Configuration.GetSection(nameof(JwtConfig));
 
-            var signinDecodKey = (IJwtSigningDecodingKey)_signingKey;
+            var signingKey = new SigningSymmetricKey(jwtConfig[nameof(JwtConfig.SecretKey)]);
 
-            const string jwtSchemeName = "JwtBearer";
+            services.AddSingleton<IJwtSigningEncodingKey>(signingKey);
 
-            services.AddAuthentication(options => {
-                options.DefaultAuthenticateScheme = jwtSchemeName;
-                options.DefaultChallengeScheme = jwtSchemeName;
-            }).AddJwtBearer(jwtSchemeName, JwtBearerOptions =>
+            var signinDecodKey = (IJwtSigningDecodingKey)signingKey;
+
+
+            services.AddAuthentication(options =>
             {
-                JwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
+                options.DefaultAuthenticateScheme = jwtConfig[nameof(JwtConfig.AuthenticationScheme)];
+                options.DefaultChallengeScheme = jwtConfig[nameof(JwtConfig.AuthenticationScheme)];
+            }).AddJwtBearer(
+                jwtConfig[nameof(JwtConfig.AuthenticationScheme)],
+                JwtBearerOptions =>
                 {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = signinDecodKey.GetKey(),
+                    JwtBearerOptions.SaveToken = true;
 
-                    ValidateIssuer = true,
-                    ValidIssuer = "ChatWebApi",
+                    JwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = signinDecodKey.GetKey(),
 
-                    ValidateAudience = true,
-                    ValidAudience = "Web",
+                        ValidateIssuer = true,
+                        ValidIssuer = "ChatWebApi",
 
-                    ValidateLifetime = true,
+                        ValidateAudience = true,
+                        ValidAudience = "Web",
 
-                    ClockSkew = TimeSpan.FromSeconds(5)
-                };
-            })
-                ;
-            services.AddControllers();
+                        ValidateLifetime = true,
+
+                        ClockSkew = TimeSpan.FromSeconds(5)
+                    };
+                });
 
             services.AddDbContext<ApplicationDbContex>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("IdentityConnection")));
@@ -84,7 +87,7 @@ namespace chat.backend
 
             services.AddAuthorization(options => {
                 options.AddPolicy("ApiUser", policy => 
-                policy.RequireClaim(Constants.JwtClaimIdentifiers.Rol, Constants.JwtClaims.ApiAccess));
+                policy.RequireClaim(Constants.JwtClaimIdentifiers.Rol, Constants.JwtClaims.User));
             });
 
         }

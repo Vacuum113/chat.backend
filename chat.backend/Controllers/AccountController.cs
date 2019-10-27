@@ -8,6 +8,8 @@ using System.Linq;
 using System.Net;
 using Microsoft.AspNetCore.Authorization;
 using chat.backend.Helpers;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace chat.backend.Controllers
 {
@@ -16,11 +18,10 @@ namespace chat.backend.Controllers
     public class AccountController : ControllerBase
     {
         public UserManager<ChatUser> _userManager { get; set; } 
-        public SignInManager<ChatUser> _signInManager { get; set; }
-        public AccountController(UserManager<ChatUser> userManager, SignInManager<ChatUser> signInManager)
+
+        public AccountController(UserManager<ChatUser> userManager)
         {
             _userManager = userManager;
-            _signInManager = signInManager;
         }
 
         [HttpPost]
@@ -45,7 +46,25 @@ namespace chat.backend.Controllers
 
             if (result.Succeeded)
             {
-                return new OkObjectResult("Account created");
+                var user = await _userManager.FindByEmailAsync(model.Email);
+
+                var claims = new Claim[]
+                {
+                    new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                    new Claim(Constants.JwtClaimIdentifiers.Rol, Constants.JwtClaims.User),
+                    new Claim("id", user.Id)
+                };
+
+                result = await _userManager.AddClaimsAsync(user, claims);
+                if (result.Succeeded)
+                {
+                    return new OkObjectResult("Account created");
+                }
+                else
+                {
+                    await _userManager.DeleteAsync(user);
+                    Errors.AddErrorsToModelState(result, ModelState);
+                }
             }
             else
             {
