@@ -5,8 +5,6 @@ namespace chat.backend.Models.ViewModel
     public class EditEmailChatUserViewModel
     {
         [Required]
-        public System.Int64 ChatUserID { get; set; }
-        [Required]
         public string UserName { get; set; }
         [Required]
         public string OldEmail { get; set; }

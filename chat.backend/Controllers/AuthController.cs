@@ -40,12 +40,14 @@ namespace chat.backend.Controllers
                 return BadRequest(ModelState);
             }
 
-            var claims = new Claim[]
-            {
-                new Claim(JwtRegisteredClaimNames.Email, credentials.Email),
-                new Claim(Constants.JwtClaimIdentifiers.Rol, Constants.JwtClaims.ApiAccess),
-                new Claim("id", validateCredentials.Id)
-            };
+            var claims = await _userManager.GetClaimsAsync(validateCredentials);
+
+            //var claims = new Claim[]
+            //{
+            //    new Claim(JwtRegisteredClaimNames.Email, credentials.Email),
+            //    new Claim(Constants.JwtClaimIdentifiers.Rol, Constants.JwtClaims.User),
+            //    new Claim("id", validateCredentials.Id)
+            //};
 
             var token = new JwtSecurityToken(
                 issuer: "ChatWebApi",
