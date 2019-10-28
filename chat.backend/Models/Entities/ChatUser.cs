@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace chat.backend.Models
+namespace chat.backend.Models.Entities
 {
     public class ChatUser : IdentityUser
     {
-
+        public RefToken Token { get; set; }
     }
 }

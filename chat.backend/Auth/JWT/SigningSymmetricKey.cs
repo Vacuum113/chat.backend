@@ -1,7 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace chat.backend.Auth
+namespace chat.backend.Auth.JWT
 {
     public class SigningSymmetricKey :  IJwtSigningEncodingKey, IJwtSigningDecodingKey
     {

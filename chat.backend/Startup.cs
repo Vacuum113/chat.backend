@@ -14,10 +14,11 @@ using chat.backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication;
-using chat.backend.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using chat.backend.Helpers;
+using chat.backend.Auth.JWT;
+using chat.backend.Models.Entities;
 
 namespace chat.backend
 {
@@ -65,6 +66,7 @@ namespace chat.backend
                         ValidateAudience = true,
                         ValidAudience = "Web",
 
+                        RequireExpirationTime = true,
                         ValidateLifetime = true,
 
                         ClockSkew = TimeSpan.FromSeconds(5)

@@ -154,7 +154,7 @@ namespace chat.backend.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
-            modelBuilder.Entity("chat.backend.Models.ChatUser", b =>
+            modelBuilder.Entity("chat.backend.Models.Entities.ChatUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -219,6 +219,22 @@ namespace chat.backend.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
+            modelBuilder.Entity("chat.backend.Models.Entities.RefToken", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("ExpirationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -230,7 +246,7 @@ namespace chat.backend.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("chat.backend.Models.ChatUser", null)
+                    b.HasOne("chat.backend.Models.Entities.ChatUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -239,7 +255,7 @@ namespace chat.backend.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("chat.backend.Models.ChatUser", null)
+                    b.HasOne("chat.backend.Models.Entities.ChatUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -254,7 +270,7 @@ namespace chat.backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("chat.backend.Models.ChatUser", null)
+                    b.HasOne("chat.backend.Models.Entities.ChatUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -263,9 +279,18 @@ namespace chat.backend.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("chat.backend.Models.ChatUser", null)
+                    b.HasOne("chat.backend.Models.Entities.ChatUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("chat.backend.Models.Entities.RefToken", b =>
+                {
+                    b.HasOne("chat.backend.Models.Entities.ChatUser", "ChatUser")
+                        .WithOne("Token")
+                        .HasForeignKey("chat.backend.Models.Entities.RefToken", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
