@@ -1,5 +1,6 @@
 ﻿using chat.backend.Auth.JWT;
 using chat.backend.Auth.RefreshToken;
+using chat.backend.ContextExtensions;
 using chat.backend.Helpers;
 using chat.backend.Models;
 using chat.backend.Models.Entities;
@@ -26,7 +27,7 @@ namespace chat.backend.Controllers
         private ApplicationDbContex _applicationDbContex;
 
         public AuthController(
-            [FromServices]IJwtSigningEncodingKey signingEncodingKey, 
+            [FromServices]IJwtSigningEncodingKey signingEncodingKey,
             UserManager<ChatUser> userManager,
             ApplicationDbContex applicationDbContex
             )
@@ -36,7 +37,7 @@ namespace chat.backend.Controllers
             _applicationDbContex = applicationDbContex;
         }
 
-        [HttpPost("login")]
+        [HttpPost("Login")]
         [AllowAnonymous]
         public async Task<IActionResult> Post([FromBody] CredentialsViewModel credentials)
         {
@@ -45,56 +46,99 @@ namespace chat.backend.Controllers
                 return BadRequest(ModelState);
             }
 
-            var validateCredentials = await _userManager.FindByEmailAsync(credentials.Email);
+            var validateCredentials = await _applicationDbContex.Users
+                .Include(u => u.Token)
+                .FirstAsync(l => l.Email == credentials.Email);
+
             if (!(await _userManager.CheckPasswordAsync(validateCredentials, credentials.Password)))
             {
-                Errors.AddErrorToModelState("Wrong password.", "Password failed verification.", ModelState);
+                Errors.AddErrorToModelState("wrong_password.", "Password failed verification.", ModelState);
                 return BadRequest(ModelState);
             }
 
+            var claims = await _userManager.GetClaimsAsync(validateCredentials);
+            string jwt = new JwtSecurityTokenHandler()
+                .WriteToken(JwtTokenProps.GetJwtSecurityToken(_signingEncodingKey, claims));
             var refToken = new RfrshToken().GenerateRefreshToken();
 
-            _applicationDbContex.RefreshTokens.Add(new RefToken { Id = validateCredentials.Id, RefreshToken = refToken, ExpirationTime = DateTime.Now.AddDays(1)});
-            _applicationDbContex.SaveChanges();
-
-            var claims = await _userManager.GetClaimsAsync(validateCredentials);
-
-            var token = JwtTokenProps.GetJwtSecurityToken(_signingEncodingKey, claims);
- 
-            string jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
+            if (validateCredentials.Token == null)
+            {
+                _applicationDbContex.RefreshTokens.Add(new RefToken
+                {
+                    ChatUserId = validateCredentials.Id,
+                    RefreshToken = refToken,
+                    ExpirationTime = DateTime.Now.AddDays(1)
+                });
+            }
+            else
+            {
+                if (DateTime.Now > validateCredentials.Token.ExpirationTime)
+                {
+                    return new OkObjectResult(new { jwt, validateCredentials.Token });
+                }
+                else
+                {
+                    validateCredentials.Token.RefreshToken = refToken;
+                    validateCredentials.Token.ExpirationTime = DateTime.Now.AddDays(1);
+                }
+            }
+            await _applicationDbContex.SaveChangesAsync();
             return new OkObjectResult(new { jwt, refToken });
         }
 
-        [HttpPost("refreshToken")]
+        [HttpPost("RefreshToken")]
         [AllowAnonymous]
         public async Task<IActionResult> Post(RefresTokenVievModel model )
         {
-            //var user = await _userManager.FindByIdAsync(model.UserId);
-            var user = _applicationDbContex.Users.Include("Token").First(c => c.Id == model.UserId);
-
-            var result = user.Token.RefreshToken == model.RefreshToken;
-            if (result && DateTime.Now <= user.Token.ExpirationTime)
+            if (!ModelState.IsValid)
             {
-                var claims = await _userManager.GetClaimsAsync(user);
+                return BadRequest(ModelState);
+            }
 
-                var token = JwtTokenProps.GetJwtSecurityToken(_signingEncodingKey, claims);
+            var userEmail = HttpContext.User.Claims
+                .FirstOrDefault(x => x.Type == ClaimTypes.Email)
+                .Value;
 
-                var refToken = new RfrshToken().GenerateRefreshToken();
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                Errors.AddErrorToModelState("invalid_jwt_token", "Failed to parse jwt token.", ModelState);
+                return BadRequest(ModelState);
+            }
 
-                user.Token.ExpirationTime = DateTime.Now.AddDays(1);
-                _applicationDbContex.RefreshTokens.Update(user.Token);
-                _applicationDbContex.SaveChanges();
+            var user = await _applicationDbContex.Users
+                .Include(u => u.Token)
+                .FirstAsync(l => l.Email == userEmail);
 
-                string jwt = new JwtSecurityTokenHandler().WriteToken(token);
+            if (DateTime.Now > user.Token.ExpirationTime &&
+                user.Token.RefreshToken == model.RefreshToken)
+            {
+                var token = JwtTokenProps
+                    .GetJwtSecurityToken(_signingEncodingKey, User.Claims);
+
+                string jwt = new JwtSecurityTokenHandler()
+                    .WriteToken(token);
 
                 return new OkObjectResult(jwt);
             }
             else
             {
-                Errors.AddErrorToModelState("invalid_token", "Refresh token failed verification.", ModelState);
+                Errors.AddErrorToModelState("invalid_refresh_token", "Refresh token failed verification.", ModelState);
                 return BadRequest(ModelState);
             }
+        }
+
+        [HttpPost("LogOff")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Post()
+        {
+            var userEmail = HttpContext.User.Claims
+            .FirstOrDefault(x => x.Type == ClaimTypes.Email);
+
+            var user = await _userManager.FindByEmailAsync(userEmail.Value);
+
+            _applicationDbContex.RefreshTokens.Remove(user.Token);
+
+            return Ok();
         }
     }
 }

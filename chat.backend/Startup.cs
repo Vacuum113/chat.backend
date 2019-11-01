@@ -19,6 +19,10 @@ using Microsoft.IdentityModel.Tokens;
 using chat.backend.Helpers;
 using chat.backend.Auth.JWT;
 using chat.backend.Models.Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.CookiePolicy;
+using Microsoft.AspNetCore.Http;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace chat.backend
 {
@@ -54,7 +58,7 @@ namespace chat.backend
                 JwtBearerOptions =>
                 {
                     JwtBearerOptions.SaveToken = true;
-
+                    JwtBearerOptions.RequireHttpsMetadata = true;
                     JwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuerSigningKey = true,
@@ -71,10 +75,28 @@ namespace chat.backend
 
                         ClockSkew = TimeSpan.FromSeconds(5)
                     };
-                });
+                    //JwtBearerOptions.Events = new JwtBearerEvents
+                    //{
+                    //    OnAuthenticationFailed = context =>
+                    //    {
+                    //        if (context.Exception.Message.Contains("The token expired"))
+                    //        {
+                    //            context.Options.TokenValidationParameters.ValidateLifetime = false;
+                    //            context.Properties
+
+                    //        }
+                    //        else
+                    //        {
+                    //            return Task.CompletedTask;
+                    //        }
+
+                    //    }
+                    //};
+                }
+                ); 
 
             services.AddDbContext<ApplicationDbContex>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("IdentityConnection")));
+                options.UseSqlServer(Configuration.GetConnectionString("ConnectionString")));
 
             services.AddDefaultIdentity<ChatUser>(o => 
             {
@@ -84,14 +106,16 @@ namespace chat.backend
                 o.Password.RequiredLength = 8;
                 o.Password.RequireNonAlphanumeric = false;
                 o.User.RequireUniqueEmail = true;
-            }).AddEntityFrameworkStores<ApplicationDbContex>();
+            })
+                .AddEntityFrameworkStores<ApplicationDbContex>()
+                .AddDefaultTokenProviders();
 
 
-            services.AddAuthorization(options => {
-                options.AddPolicy("ApiUser", policy => 
-                policy.RequireClaim(Constants.JwtClaimIdentifiers.Rol, Constants.JwtClaims.User));
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("ApiUser", policy =>
+                    policy.RequireClaim(Constants.JwtClaimIdentifiers.Rol, Constants.JwtClaims.User));
             });
-
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -100,17 +124,34 @@ namespace chat.backend
             {
                 app.UseDeveloperExceptionPage();
             }
+            //else
+            //{
+            //    app.UseExceptionHandler(errorApp =>
+            //    {
+            //        errorApp.Run(async context =>
+            //        { 
+            //            errorApp.
+            //        });
+            //    });
+            //}
 
             app.UseCors(x => x
+                .AllowCredentials()
                 .AllowAnyOrigin()
                 .AllowAnyMethod()
                 .AllowAnyHeader()
+            //  .WithOrigins("https://localhost:3000")  путь к нашему SPA клиенту
                 );
 
-            app.UseHttpsRedirection();
             app.UseStatusCodePages();
+
             app.UseAuthentication();
+            app.UseAuthorization();
             app.UseMvc();
+
+
+
+
         }
     }
 }

@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29319.158
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "chat.backend", "chat.backend\chat.backend.csproj", "{7143D1AA-BC3C-4A1F-B2EA-282AED3224EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "chat.backend", "chat.backend\chat.backend.csproj", "{7143D1AA-BC3C-4A1F-B2EA-282AED3224EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "chat.backend.Tests", "chat.backend.Tests\chat.backend.Tests.csproj", "{37AC2A92-3005-49E8-95E9-62B5BA7F58EF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{7143D1AA-BC3C-4A1F-B2EA-282AED3224EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7143D1AA-BC3C-4A1F-B2EA-282AED3224EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7143D1AA-BC3C-4A1F-B2EA-282AED3224EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37AC2A92-3005-49E8-95E9-62B5BA7F58EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37AC2A92-3005-49E8-95E9-62B5BA7F58EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37AC2A92-3005-49E8-95E9-62B5BA7F58EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37AC2A92-3005-49E8-95E9-62B5BA7F58EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

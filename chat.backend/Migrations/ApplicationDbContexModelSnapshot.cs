@@ -221,7 +221,12 @@ namespace chat.backend.Migrations
 
             modelBuilder.Entity("chat.backend.Models.Entities.RefToken", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("ChatUserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("ExpirationTime")
@@ -231,6 +236,10 @@ namespace chat.backend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ChatUserId")
+                        .IsUnique()
+                        .HasFilter("[ChatUserId] IS NOT NULL");
 
                     b.ToTable("RefreshTokens");
                 });
@@ -290,9 +299,7 @@ namespace chat.backend.Migrations
                 {
                     b.HasOne("chat.backend.Models.Entities.ChatUser", "ChatUser")
                         .WithOne("Token")
-                        .HasForeignKey("chat.backend.Models.Entities.RefToken", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("chat.backend.Models.Entities.RefToken", "ChatUserId");
                 });
 #pragma warning restore 612, 618
         }

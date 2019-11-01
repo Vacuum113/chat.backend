@@ -156,19 +156,21 @@ namespace chat.backend.Migrations
                 name: "RefreshTokens",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false),
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     RefreshToken = table.Column<string>(nullable: true),
-                    ExpirationTime = table.Column<DateTime>(nullable: false)
+                    ExpirationTime = table.Column<DateTime>(nullable: false),
+                    ChatUserId = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_RefreshTokens", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_RefreshTokens_AspNetUsers_Id",
-                        column: x => x.Id,
+                        name: "FK_RefreshTokens_AspNetUsers_ChatUserId",
+                        column: x => x.ChatUserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -209,6 +211,13 @@ namespace chat.backend.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_ChatUserId",
+                table: "RefreshTokens",
+                column: "ChatUserId",
+                unique: true,
+                filter: "[ChatUserId] IS NOT NULL");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

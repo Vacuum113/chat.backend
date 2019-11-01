@@ -10,7 +10,7 @@ namespace chat.backend.Auth.RefreshToken
 {
     public static class JwtTokenProps
     {
-        public static JwtSecurityToken GetJwtSecurityToken(IJwtSigningEncodingKey signingEncodingKey, IList<Claim> claims)
+        public static JwtSecurityToken GetJwtSecurityToken(IJwtSigningEncodingKey signingEncodingKey, IEnumerable<Claim> claims)
         {
             return new JwtSecurityToken(
                     issuer: "ChatWebApi",
