@@ -1,28 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using chat.backend.Auth.JWT;
+using chat.backend.Data.IdentityUserAsp;
+using chat.backend.Helpers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using chat.backend.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using chat.backend.Helpers;
-using chat.backend.Auth.JWT;
-using chat.backend.Models.Entities;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.CookiePolicy;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
+using System;
 
 namespace chat.backend
 {
@@ -47,7 +34,6 @@ namespace chat.backend
             services.AddSingleton<IJwtSigningEncodingKey>(signingKey);
 
             var signinDecodKey = (IJwtSigningDecodingKey)signingKey;
-
 
             services.AddAuthentication(options =>
             {
@@ -75,30 +61,12 @@ namespace chat.backend
 
                         ClockSkew = TimeSpan.FromSeconds(5)
                     };
-                    //JwtBearerOptions.Events = new JwtBearerEvents
-                    //{
-                    //    OnAuthenticationFailed = context =>
-                    //    {
-                    //        if (context.Exception.Message.Contains("The token expired"))
-                    //        {
-                    //            context.Options.TokenValidationParameters.ValidateLifetime = false;
-                    //            context.Properties
-
-                    //        }
-                    //        else
-                    //        {
-                    //            return Task.CompletedTask;
-                    //        }
-
-                    //    }
-                    //};
-                }
-                ); 
+                });
 
             services.AddDbContext<ApplicationDbContex>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("ConnectionString")));
 
-            services.AddDefaultIdentity<ChatUser>(o => 
+            services.AddDefaultIdentity<IdentUser>(o => 
             {
                 o.Password.RequireDigit = true;
                 o.Password.RequireLowercase = true;
@@ -109,7 +77,6 @@ namespace chat.backend
             })
                 .AddEntityFrameworkStores<ApplicationDbContex>()
                 .AddDefaultTokenProviders();
-
 
             services.AddAuthorization(options =>
             {
@@ -124,16 +91,6 @@ namespace chat.backend
             {
                 app.UseDeveloperExceptionPage();
             }
-            //else
-            //{
-            //    app.UseExceptionHandler(errorApp =>
-            //    {
-            //        errorApp.Run(async context =>
-            //        { 
-            //            errorApp.
-            //        });
-            //    });
-            //}
 
             app.UseCors(x => x
                 .AllowCredentials()
@@ -144,14 +101,9 @@ namespace chat.backend
                 );
 
             app.UseStatusCodePages();
-
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseMvc();
-
-
-
-
         }
     }
 }

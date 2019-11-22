@@ -1,15 +1,12 @@
 ﻿using chat.backend.Auth.JWT;
 using chat.backend.Auth.RefreshToken;
-using chat.backend.ContextExtensions;
 using chat.backend.Helpers;
 using chat.backend.Models;
-using chat.backend.Models.Entities;
 using chat.backend.Models.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -47,7 +44,6 @@ namespace chat.backend.Controllers
             }
 
             var validateCredentials = await _applicationDbContex.Users
-                .Include(u => u.Token)
                 .FirstAsync(l => l.Email == credentials.Email);
 
             if (!(await _userManager.CheckPasswordAsync(validateCredentials, credentials.Password)))
@@ -61,25 +57,21 @@ namespace chat.backend.Controllers
                 .WriteToken(JwtTokenProps.GetJwtSecurityToken(_signingEncodingKey, claims));
             var refToken = new RfrshToken().GenerateRefreshToken();
 
-            if (validateCredentials.Token == null)
+            if (validateCredentials.RefreshToken == null)
             {
-                _applicationDbContex.RefreshTokens.Add(new RefToken
-                {
-                    ChatUserId = validateCredentials.Id,
-                    RefreshToken = refToken,
-                    ExpirationTime = DateTime.Now.AddDays(1)
-                });
+                validateCredentials.RefreshToken = refToken;
+                validateCredentials.ExpirationTime = DateTime.UtcNow.AddDays(1) ;
             }
             else
             {
-                if (DateTime.Now > validateCredentials.Token.ExpirationTime)
+                if (DateTime.Now > validateCredentials.ExpirationTime)
                 {
-                    return new OkObjectResult(new { jwt, validateCredentials.Token });
+                    return new OkObjectResult(new { jwt, validateCredentials.RefreshToken });
                 }
                 else
                 {
-                    validateCredentials.Token.RefreshToken = refToken;
-                    validateCredentials.Token.ExpirationTime = DateTime.Now.AddDays(1);
+                    validateCredentials.RefreshToken = refToken;
+                    validateCredentials.ExpirationTime = DateTime.Now.AddDays(1);
                 }
             }
             await _applicationDbContex.SaveChangesAsync();
@@ -106,18 +98,15 @@ namespace chat.backend.Controllers
             }
 
             var user = await _applicationDbContex.Users
-                .Include(u => u.Token)
                 .FirstAsync(l => l.Email == userEmail);
 
-            if (DateTime.Now > user.Token.ExpirationTime &&
-                user.Token.RefreshToken == model.RefreshToken)
+            if (DateTime.Now > user.ExpirationTime &&
+                user.RefreshToken == model.RefreshToken)
             {
                 var token = JwtTokenProps
                     .GetJwtSecurityToken(_signingEncodingKey, User.Claims);
-
                 string jwt = new JwtSecurityTokenHandler()
                     .WriteToken(token);
-
                 return new OkObjectResult(jwt);
             }
             else
@@ -136,7 +125,9 @@ namespace chat.backend.Controllers
 
             var user = await _userManager.FindByEmailAsync(userEmail.Value);
 
-            _applicationDbContex.RefreshTokens.Remove(user.Token);
+            user.RefreshToken = null;
+            user.ExpirationTime = null;
+            await _applicationDbContex.SaveChangesAsync();
 
             return Ok();
         }

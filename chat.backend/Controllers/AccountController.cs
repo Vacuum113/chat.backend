@@ -1,16 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
+﻿using chat.backend.Helpers;
 using chat.backend.Models;
-using chat.backend.Models.ViewModel;
-using System.Threading.Tasks;
-using System;
-using System.Linq;
-using System.Net;
 using Microsoft.AspNetCore.Authorization;
-using chat.backend.Helpers;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
-using chat.backend.Models.Entities;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace chat.backend.Controllers
 {

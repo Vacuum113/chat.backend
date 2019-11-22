@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <SignAssembly>false</SignAssembly>
+    <UserSecretsId>0331af85-ba9e-4dea-a5f8-056863d3fb30</UserSecretsId>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <WarningLevel>0</WarningLevel>
@@ -27,6 +28,11 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\chat.backend.Data\chat.backend.Data.csproj" />
+    <ProjectReference Include="..\chat.backend.Logic\chat.backend.Logic.csproj" />
   </ItemGroup>
 
 </Project>
