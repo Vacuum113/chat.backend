@@ -1,5 +1,5 @@
-﻿using chat.backend.Helpers;
-using chat.backend.Models;
+﻿using chat.backend.Data.IdentityUserAsp;
+using chat.backend.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,9 +13,9 @@ namespace chat.backend.Controllers
     [Route("api/[controller]")]
     public class AccountController : ControllerBase
     {
-        public UserManager<ChatUser> _userManager { get; set; } 
+        public UserManager<IdentUser> _userManager { get; set; } 
 
-        public AccountController(UserManager<ChatUser> userManager)
+        public AccountController(UserManager<IdentUser> userManager)
         {
             _userManager = userManager;
         }
@@ -26,24 +26,17 @@ namespace chat.backend.Controllers
         //POST : /api/Account/Register
         public async Task<IActionResult> Post([FromBody]CreateChatUserViewModel model)
         {
-
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            ChatUser chatUser = new ChatUser
-            {
-                UserName = model.UserName,
-                Email = model.Email
-            };
-
-            var result = await _userManager.CreateAsync(chatUser, model.Password);
+            var identUser = new IdentUser{ UserName = model.UserName, Email = model.Email};
+            var result = await _userManager.CreateAsync(identUser, model.Password);
 
             if (result.Succeeded)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
-
                 var claims = new Claim[]
                 {
                     new Claim(JwtRegisteredClaimNames.Email, user.Email),

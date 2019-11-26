@@ -1,15 +1,14 @@
 using chat.backend.Auth.JWT;
+using chat.backend.Data;
 using chat.backend.Data.IdentityUserAsp;
 using chat.backend.Helpers;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.IdentityModel.Tokens;
-using System;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Builder;
 
 namespace chat.backend
 {
@@ -24,59 +23,32 @@ namespace chat.backend
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors();
-            services.AddMvc(options => options.EnableEndpointRouting = false);
-
             var jwtConfig = Configuration.GetSection(nameof(JwtConfig));
 
             var signingKey = new SigningSymmetricKey(jwtConfig[nameof(JwtConfig.SecretKey)]);
 
             services.AddSingleton<IJwtSigningEncodingKey>(signingKey);
 
-            var signinDecodKey = (IJwtSigningDecodingKey)signingKey;
+            services.AddCors();
+            services.AddMvc(options => options.EnableEndpointRouting = false);
+
 
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = jwtConfig[nameof(JwtConfig.AuthenticationScheme)];
                 options.DefaultChallengeScheme = jwtConfig[nameof(JwtConfig.AuthenticationScheme)];
-            }).AddJwtBearer(
-                jwtConfig[nameof(JwtConfig.AuthenticationScheme)],
-                JwtBearerOptions =>
-                {
-                    JwtBearerOptions.SaveToken = true;
-                    JwtBearerOptions.RequireHttpsMetadata = true;
-                    JwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = signinDecodKey.GetKey(),
-
-                        ValidateIssuer = true,
-                        ValidIssuer = "ChatWebApi",
-
-                        ValidateAudience = true,
-                        ValidAudience = "Web",
-
-                        RequireExpirationTime = true,
-                        ValidateLifetime = true,
-
-                        ClockSkew = TimeSpan.FromSeconds(5)
-                    };
-                });
+            })
+                .AddJwtBearerOptions(nameof(JwtConfig.AuthenticationScheme), (IJwtSigningDecodingKey)signingKey);
+            
 
             services.AddDbContext<ApplicationDbContex>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("ConnectionString")));
+                options.UseSqlServer(Configuration.GetConnectionString("ConnectionString"), b => b.MigrationsAssembly("chat.backend.Data")));
 
-            services.AddDefaultIdentity<IdentUser>(o => 
-            {
-                o.Password.RequireDigit = true;
-                o.Password.RequireLowercase = true;
-                o.Password.RequireUppercase = true;
-                o.Password.RequiredLength = 8;
-                o.Password.RequireNonAlphanumeric = false;
-                o.User.RequireUniqueEmail = true;
-            })
+
+            services.AddDefaultIdentity<IdentUser>(o => o.AddIdentityOptions())
                 .AddEntityFrameworkStores<ApplicationDbContex>()
                 .AddDefaultTokenProviders();
+
 
             services.AddAuthorization(options =>
             {

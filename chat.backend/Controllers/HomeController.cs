@@ -1,4 +1,4 @@
-﻿using chat.backend.Models;
+﻿using chat.backend.Data.IdentityUserAsp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,8 +12,8 @@ namespace chat.backend.Controllers
     [Route("api/[controller]/[action]")]
     public class HomeController : ControllerBase
     {
-        private UserManager<ChatUser> _userManager;
-        public HomeController(UserManager<ChatUser> userManager)
+        private UserManager<IdentUser> _userManager;
+        public HomeController(UserManager<IdentUser> userManager)
         {
             _userManager = userManager;
         }

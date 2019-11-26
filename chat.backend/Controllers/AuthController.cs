@@ -1,8 +1,9 @@
 ﻿using chat.backend.Auth.JWT;
 using chat.backend.Auth.RefreshToken;
+using chat.backend.Data;
+using chat.backend.Data.IdentityUserAsp;
 using chat.backend.Helpers;
-using chat.backend.Models;
-using chat.backend.Models.ViewModel;
+using chat.backend.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -19,13 +20,13 @@ namespace chat.backend.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private UserManager<ChatUser> _userManager;
+        private UserManager<IdentUser> _userManager;
         private IJwtSigningEncodingKey _signingEncodingKey;
         private ApplicationDbContex _applicationDbContex;
 
         public AuthController(
             [FromServices]IJwtSigningEncodingKey signingEncodingKey,
-            UserManager<ChatUser> userManager,
+            UserManager<IdentUser> userManager,
             ApplicationDbContex applicationDbContex
             )
         {

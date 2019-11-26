@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using chat.backend.Data.IdentityUserAsp;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace chat.backend.Data.IdentityUserAsp
+namespace chat.backend.Data
 {
     public class ApplicationDbContex : IdentityDbContext<IdentUser>
     {
